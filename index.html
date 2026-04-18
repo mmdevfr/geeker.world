@@ -28,7 +28,7 @@ body {
     filter: blur(2px) brightness(0.5) saturate(1.6);
 }
 
-/* TRIPPY OVERLAY */
+/* 🌈 TRIPPY OVERLAY */
 body::before {
     content: "";
     position: fixed;
@@ -48,7 +48,7 @@ body::before {
     100% { transform: translate(-5%, -5%) scale(1.2); }
 }
 
-/* MAIN IMAGE */
+/* 🖼 MAIN IMAGE */
 #mainImg {
     max-width: 90vw;
     max-height: 90vh;
@@ -64,7 +64,7 @@ body::before {
     transform: scale(0.98);
 }
 
-/* BOTTOM RIGHT IMAGE */
+/* 📍 BOTTOM RIGHT IMAGE */
 #cornerImg {
     position: fixed;
     bottom: 10px;
@@ -89,7 +89,7 @@ body::before {
     100% { transform: translateY(0px); }
 }
 
-/* MUSIC BUTTON */
+/* 🎵 MUSIC BUTTON */
 #musicBtn {
     position: fixed;
     top: 10px;
@@ -117,26 +117,26 @@ body::before {
 
 <body>
 
-<!-- 🎥 BACKGROUND VIDEO (YOUR LINK) -->
+<!-- 🎥 VIDEO BACKGROUND -->
 <video id="bgVideo" autoplay muted loop>
     <source src="https://i.imgur.com/o9OTxU1.mp4" type="video/mp4">
 </video>
 
-<!-- 🎵 OPTIONAL AUDIO (same file) -->
+<!-- 🎵 MUSIC -->
 <audio id="music" loop>
     <source src="https://i.imgur.com/o9OTxU1.mp4" type="audio/mp4">
 </audio>
 
 <button id="musicBtn">▶ Play Music</button>
 
-<!-- MAIN IMAGE -->
+<!-- 🖼 MAIN IMAGE -->
 <img id="mainImg" src="https://i.imgur.com/SnKKkNU.png">
 
-<!-- BOTTOM RIGHT IMAGE -->
+<!-- 📍 CORNER IMAGE -->
 <img id="cornerImg" src="https://i.imgur.com/Hq3TZcr.png">
 
 <script>
-/* IMAGE SWITCHER */
+/* 🖼 IMAGE SWITCHER */
 const images = [
     "https://i.imgur.com/SnKKkNU.png",
     "https://i.imgur.com/m7oPaVQ.png",
@@ -156,28 +156,39 @@ img.onclick = () => {
     }, 150);
 };
 
-/* CORNER ZOOM */
+/* 📍 CORNER ZOOM */
 const cornerImg = document.getElementById("cornerImg");
 
 cornerImg.onclick = () => {
     cornerImg.classList.toggle("enlarged");
 };
 
-/* MUSIC TOGGLE */
+/* 🎵 MUSIC SYSTEM */
 const music = document.getElementById("music");
 const btn = document.getElementById("musicBtn");
 
-let playing = false;
+let started = false;
 
-btn.onclick = () => {
-    if (!playing) {
+/* auto-start after first interaction */
+document.body.addEventListener("click", () => {
+    if (!started) {
+        music.play().catch(() => {});
+        btn.innerText = "⏸ Pause Music";
+        started = true;
+    }
+}, { once: true });
+
+/* button control */
+btn.onclick = (e) => {
+    e.stopPropagation();
+
+    if (music.paused) {
         music.play();
         btn.innerText = "⏸ Pause Music";
     } else {
         music.pause();
         btn.innerText = "▶ Play Music";
     }
-    playing = !playing;
 };
 </script>
 
