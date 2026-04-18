@@ -51,16 +51,27 @@ body::before {
     transform: scale(0.98);
 }
 
-/* BOTTOM RIGHT IMAGE (FORCED VISIBLE) */
+/* BOTTOM RIGHT IMAGE */
 #cornerImg {
     position: fixed;
     bottom: 10px;
     right: 10px;
     width: 200px;
     z-index: 9999;
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: pointer;
     filter: drop-shadow(0 0 20px #ff00ff);
+
+    /* smooth animation */
+    transition: transform 0.3s ease;
+    transform-origin: bottom right;
+
     animation: floaty 3s ease-in-out infinite;
+}
+
+#cornerImg.enlarged {
+    transform: scale(1.25);
+    animation: none; /* stops floating when enlarged for stability */
 }
 
 @keyframes floaty {
@@ -76,7 +87,7 @@ body::before {
 <!-- MAIN CLICK IMAGE -->
 <img id="mainImg" src="https://i.imgur.com/SnKKkNU.png">
 
-<!-- BOTTOM RIGHT IMAGE (UPDATED) -->
+<!-- BOTTOM RIGHT IMAGE -->
 <img id="cornerImg" src="https://i.imgur.com/Hq3TZcr.png">
 
 <script>
@@ -97,6 +108,13 @@ img.onclick = () => {
         img.src = images[index];
         img.style.opacity = 1;
     }, 150);
+};
+
+/* bottom right click zoom */
+const cornerImg = document.getElementById("cornerImg");
+
+cornerImg.onclick = () => {
+    cornerImg.classList.toggle("enlarged");
 };
 </script>
 
