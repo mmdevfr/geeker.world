@@ -16,7 +16,7 @@ body {
     overflow: hidden;
 }
 
-/* subtle trippy glow background */
+/* TRIPPY BACKGROUND */
 body::before {
     content: "";
     position: absolute;
@@ -35,7 +35,8 @@ body::before {
     100% { transform: translate(-5%, -5%) scale(1.2); }
 }
 
-img {
+/* MAIN IMAGE */
+#mainImg {
     max-width: 90vw;
     max-height: 90vh;
     border-radius: 20px;
@@ -47,15 +48,37 @@ img {
     transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-img:active {
+#mainImg:active {
     transform: scale(0.98);
+}
+
+/* BOTTOM RIGHT IMAGE */
+.corner-img {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    width: 120px;
+    z-index: 999;
+    pointer-events: none;
+    filter: drop-shadow(0 0 15px #ff00ff);
+    animation: floaty 3s ease-in-out infinite;
+}
+
+@keyframes floaty {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
 }
 </style>
 </head>
 
 <body>
 
+<!-- MAIN CLICK IMAGE -->
 <img id="mainImg" src="https://i.imgur.com/SnKKkNU.png" />
+
+<!-- BOTTOM RIGHT IMAGE -->
+<img src="https://i.imgur.com/WLcWJA0.png" class="corner-img">
 
 <script>
 const images = [
