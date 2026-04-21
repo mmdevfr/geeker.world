@@ -16,17 +16,17 @@ body {
     background: black;
 }
 
-/* VIDEO BACKGROUND */
+/* 🎥 BACKGROUND VIDEO */
 #bgVideo {
     position: fixed;
     width: 100%;
     height: 100%;
     object-fit: cover;
     z-index: -2;
-    filter: brightness(0.5) blur(2px);
+    filter: blur(2px) brightness(0.5) saturate(1.6);
 }
 
-/* TRIPPY LAYER */
+/* 🌈 TRIPPY OVERLAY */
 body::before {
     content: "";
     position: fixed;
@@ -40,16 +40,17 @@ body::before {
     opacity: 0.6;
 }
 
-/* MAIN IMAGE */
+/* 🖼 MAIN IMAGE */
 #mainImg {
     max-width: 90vw;
     max-height: 90vh;
     border-radius: 20px;
     cursor: pointer;
     box-shadow: 0 0 60px rgba(255,0,255,0.6);
+    transition: 0.2s;
 }
 
-/* CORNER IMAGE */
+/* 📍 CORNER IMAGE */
 #cornerImg {
     position: fixed;
     bottom: 10px;
@@ -62,7 +63,7 @@ body::before {
     transform: scale(1.2);
 }
 
-/* CHAT */
+/* 💬 CHAT */
 #chatBox {
     position: fixed;
     left: 10px;
@@ -95,36 +96,51 @@ body::before {
     color: white;
     border-top: 1px solid #ff00ff;
 }
+
+/* 🔵 DISCORD BUTTON */
+#discordBtn {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 9999;
+    padding: 10px;
+    background: #5865F2;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
 </style>
 </head>
 
 <body>
 
-<!-- VIDEO -->
+<!-- 🎥 VIDEO -->
 <video id="bgVideo" autoplay muted loop>
     <source src="https://i.imgur.com/o9OTxU1.mp4">
 </video>
 
-<!-- MAIN IMAGE -->
+<!-- 🖼 IMAGES -->
 <img id="mainImg" src="https://i.imgur.com/SnKKkNU.png">
-
-<!-- CORNER IMAGE -->
 <img id="cornerImg" src="https://i.imgur.com/Hq3TZcr.png">
 
-<!-- CHAT -->
+<!-- 🔵 DISCORD -->
+<button id="discordBtn">Join Discord</button>
+
+<!-- 💬 CHAT -->
 <div id="chatBox">
     <input id="usernameInput" placeholder="username..." />
     <div id="messages"></div>
     <input id="msgInput" placeholder="message..." />
 </div>
 
-<!-- FIREBASE -->
+<!-- 🔥 FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* 🔥 PASTE YOUR CONFIG HERE */
+/* 🔑 YOUR FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "PASTE_HERE",
   authDomain: "PASTE_HERE",
@@ -137,13 +153,33 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* CHAT */
+/* 💬 CHAT ELEMENTS */
 const usernameInput = document.getElementById("usernameInput");
 const input = document.getElementById("msgInput");
 const messagesDiv = document.getElementById("messages");
 
-const verified = ["admin", "owner"];
+/* ✅ VERIFIED USERS */
+const verifiedUsers = ["admin", "owner"];
 
+/* 🔵 DISCORD SYSTEM */
+let isDiscordMember = localStorage.getItem("discordMember") === "true";
+
+/* 🔥 COOLDOWN */
+let lastMsg = 0;
+
+function cooldown() {
+    return isDiscordMember ? 2000 : 5000;
+}
+
+/* 🔵 DISCORD BUTTON */
+document.getElementById("discordBtn").onclick = () => {
+    window.open("https://discord.gg/GjyFxq5wqN", "_blank");
+    localStorage.setItem("discordMember", "true");
+    isDiscordMember = true;
+    alert("Verified Discord Member: 2s cooldown unlocked!");
+};
+
+/* 💬 LIVE CHAT */
 const q = query(collection(db, "messages"), orderBy("time"));
 
 onSnapshot(q, (snapshot) => {
@@ -151,11 +187,16 @@ onSnapshot(q, (snapshot) => {
 
     snapshot.forEach(doc => {
         const d = doc.data();
-        const isVerified = verified.includes(d.user);
+
+        const isVerified = verifiedUsers.includes(d.user);
+        const isDiscord = isDiscordMember && d.user === usernameInput.value;
 
         const div = document.createElement("div");
+
         div.innerHTML = `
-            ${isVerified ? "✅" : ""} <b>${d.user}</b>: ${d.text}
+            ${isVerified ? "✅" : ""}
+            ${isDiscord ? "🔵" : ""}
+            <b>${d.user}</b>: ${d.text}
         `;
 
         messagesDiv.appendChild(div);
@@ -164,21 +205,27 @@ onSnapshot(q, (snapshot) => {
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
 });
 
+/* 📤 SEND MESSAGE */
 input.addEventListener("keypress", async (e) => {
-    if (e.key === "Enter" && input.value.trim() !== "") {
-        const user = usernameInput.value.trim() || "anon";
+    if (e.key !== "Enter") return;
+    if (input.value.trim() === "") return;
 
-        await addDoc(collection(db, "messages"), {
-            user,
-            text: input.value,
-            time: Date.now()
-        });
+    const now = Date.now();
+    if (now - lastMsg < cooldown()) return;
 
-        input.value = "";
-    }
+    const user = usernameInput.value.trim() || "anon";
+
+    await addDoc(collection(db, "messages"), {
+        user,
+        text: input.value,
+        time: Date.now()
+    });
+
+    lastMsg = now;
+    input.value = "";
 });
 
-/* IMAGE CLICK */
+/* 🖼 IMAGE SWITCH */
 const imgs = [
  "https://i.imgur.com/SnKKkNU.png",
  "https://i.imgur.com/m7oPaVQ.png",
@@ -196,7 +243,7 @@ document.getElementById("mainImg").onclick = () => {
     }, 150);
 };
 
-/* CORNER ZOOM */
+/* 📍 CORNER ZOOM */
 document.getElementById("cornerImg").onclick = () => {
     document.getElementById("cornerImg").classList.toggle("enlarged");
 };
