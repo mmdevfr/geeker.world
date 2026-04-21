@@ -16,11 +16,10 @@ body {
     background: black;
 }
 
-/* 🎥 BACKGROUND VIDEO */
+/* BACKGROUND VIDEO */
 #bgVideo {
     position: fixed;
-    top: 0;
-    left: 0;
+    top: 0; left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -28,7 +27,7 @@ body {
     filter: blur(2px) brightness(0.5) saturate(1.6);
 }
 
-/* 🌈 TRIPPY OVERLAY */
+/* TRIPPY EFFECT */
 body::before {
     content: "";
     position: fixed;
@@ -38,157 +37,184 @@ body::before {
                 radial-gradient(circle at 80% 30%, #00ffff, transparent 40%),
                 radial-gradient(circle at 50% 80%, #39ff14, transparent 40%);
     filter: blur(90px);
-    animation: move 6s infinite alternate;
     z-index: -1;
     opacity: 0.6;
 }
 
-@keyframes move {
-    0% { transform: translate(-10%, -10%) scale(1); }
-    100% { transform: translate(-5%, -5%) scale(1.2); }
-}
-
-/* 🖼 MAIN IMAGE */
+/* MAIN IMAGE */
 #mainImg {
     max-width: 90vw;
     max-height: 90vh;
     border-radius: 20px;
     cursor: pointer;
     z-index: 2;
-    box-shadow: 0 0 60px rgba(255, 0, 255, 0.6),
-                0 0 100px rgba(0, 255, 255, 0.4);
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 0 60px rgba(255,0,255,0.6);
+    transition: 0.2s;
 }
 
-#mainImg:active {
-    transform: scale(0.98);
-}
-
-/* 📍 BOTTOM RIGHT IMAGE */
+/* CORNER IMAGE */
 #cornerImg {
     position: fixed;
     bottom: 10px;
     right: 10px;
-    width: 200px;
-    z-index: 9999;
+    width: 180px;
     cursor: pointer;
-    filter: drop-shadow(0 0 20px #ff00ff);
-    transition: transform 0.3s ease;
-    transform-origin: bottom right;
-    animation: floaty 3s ease-in-out infinite;
+    z-index: 9999;
+    transition: 0.3s;
 }
-
 #cornerImg.enlarged {
-    transform: scale(1.25);
-    animation: none;
+    transform: scale(1.2);
 }
 
-@keyframes floaty {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0px); }
-}
-
-/* 🎵 MUSIC BUTTON */
-#musicBtn {
+/* CHAT */
+#chatBox {
     position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 9999;
-
-    padding: 10px 15px;
-    border-radius: 10px;
+    left: 10px;
+    bottom: 10px;
+    width: 300px;
+    height: 320px;
+    background: rgba(0,0,0,0.7);
     border: 1px solid #ff00ff;
-
-    background: rgba(255, 0, 255, 0.2);
-    color: white;
-    cursor: pointer;
-
+    border-radius: 12px;
     backdrop-filter: blur(10px);
-    transition: 0.2s;
+    display: flex;
+    flex-direction: column;
+    z-index: 9999;
 }
 
-#musicBtn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 20px #ff00ff;
+#messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    color: white;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+#usernameInput, #msgInput {
+    border: none;
+    padding: 8px;
+    outline: none;
+    background: black;
+    color: white;
+    border-top: 1px solid #ff00ff;
 }
 </style>
 </head>
 
 <body>
 
-<!-- 🎥 VIDEO BACKGROUND -->
+<!-- VIDEO -->
 <video id="bgVideo" autoplay muted loop>
-    <source src="https://i.imgur.com/o9OTxU1.mp4" type="video/mp4">
+    <source src="https://i.imgur.com/o9OTxU1.mp4">
 </video>
 
-<!-- 🎵 MUSIC -->
+<!-- MUSIC -->
 <audio id="music" loop>
-    <source src="https://i.imgur.com/o9OTxU1.mp4" type="audio/mp4">
+    <source src="https://i.imgur.com/o9OTxU1.mp4">
 </audio>
 
-<button id="musicBtn">▶ Play Music</button>
-
-<!-- 🖼 MAIN IMAGE -->
+<!-- MAIN IMAGE -->
 <img id="mainImg" src="https://i.imgur.com/SnKKkNU.png">
 
-<!-- 📍 CORNER IMAGE -->
+<!-- CORNER IMAGE -->
 <img id="cornerImg" src="https://i.imgur.com/Hq3TZcr.png">
 
-<script>
-/* 🖼 IMAGE SWITCHER */
-const images = [
-    "https://i.imgur.com/SnKKkNU.png",
-    "https://i.imgur.com/m7oPaVQ.png",
-    "https://i.imgur.com/aAQdrG7.png"
+<!-- CHAT -->
+<div id="chatBox">
+    <input id="usernameInput" placeholder="username..." />
+    <div id="messages"></div>
+    <input id="msgInput" placeholder="message..." />
+</div>
+
+<!-- FIREBASE + CHAT -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* 🔑 PUT YOUR FIREBASE CONFIG HERE */
+const firebaseConfig = {
+  apiKey: "PASTE",
+  authDomain: "PASTE",
+  projectId: "PASTE",
+  storageBucket: "PASTE",
+  messagingSenderId: "PASTE",
+  appId: "PASTE"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* CHAT */
+const usernameInput = document.getElementById("usernameInput");
+const input = document.getElementById("msgInput");
+const messagesDiv = document.getElementById("messages");
+
+const verified = ["admin", "owner"];
+
+const q = query(collection(db, "messages"), orderBy("time"));
+
+onSnapshot(q, (snapshot) => {
+    messagesDiv.innerHTML = "";
+
+    snapshot.forEach(doc => {
+        const d = doc.data();
+        const isVerified = verified.includes(d.user);
+
+        const div = document.createElement("div");
+        div.innerHTML = `
+            ${isVerified ? "✅" : ""} <b>${d.user}</b>: ${d.text}
+        `;
+
+        messagesDiv.appendChild(div);
+    });
+
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+});
+
+input.addEventListener("keypress", async (e) => {
+    if (e.key === "Enter" && input.value.trim() !== "") {
+        const user = usernameInput.value.trim() || "anon";
+
+        await addDoc(collection(db, "messages"), {
+            user,
+            text: input.value,
+            time: Date.now()
+        });
+
+        input.value = "";
+    }
+});
+
+/* MUSIC AUTO START */
+const music = document.getElementById("music");
+
+document.body.addEventListener("click", () => {
+    music.play().catch(()=>{});
+}, { once: true });
+
+/* IMAGE SWITCH */
+const imgs = [
+ "https://i.imgur.com/SnKKkNU.png",
+ "https://i.imgur.com/m7oPaVQ.png",
+ "https://i.imgur.com/aAQdrG7.png"
 ];
 
-let index = 0;
-const img = document.getElementById("mainImg");
-
-img.onclick = () => {
-    index = (index + 1) % images.length;
+let i = 0;
+document.getElementById("mainImg").onclick = () => {
+    i = (i + 1) % imgs.length;
+    const img = document.getElementById("mainImg");
     img.style.opacity = 0;
-
-    setTimeout(() => {
-        img.src = images[index];
+    setTimeout(()=> {
+        img.src = imgs[i];
         img.style.opacity = 1;
     }, 150);
 };
 
-/* 📍 CORNER ZOOM */
-const cornerImg = document.getElementById("cornerImg");
-
-cornerImg.onclick = () => {
-    cornerImg.classList.toggle("enlarged");
-};
-
-/* 🎵 MUSIC SYSTEM */
-const music = document.getElementById("music");
-const btn = document.getElementById("musicBtn");
-
-let started = false;
-
-/* auto-start after first interaction */
-document.body.addEventListener("click", () => {
-    if (!started) {
-        music.play().catch(() => {});
-        btn.innerText = "⏸ Pause Music";
-        started = true;
-    }
-}, { once: true });
-
-/* button control */
-btn.onclick = (e) => {
-    e.stopPropagation();
-
-    if (music.paused) {
-        music.play();
-        btn.innerText = "⏸ Pause Music";
-    } else {
-        music.pause();
-        btn.innerText = "▶ Play Music";
-    }
+/* CORNER ZOOM */
+document.getElementById("cornerImg").onclick = () => {
+    document.getElementById("cornerImg").classList.toggle("enlarged");
 };
 </script>
 
