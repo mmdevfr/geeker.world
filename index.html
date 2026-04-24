@@ -9,170 +9,190 @@
 body {
     margin: 0;
     background: black;
+    height: 100vh;
     overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-/* BACKGROUND */
+/* TRIPPY BACKGROUND */
 body::before {
     content: "";
     position: fixed;
-    width: 200%;
-    height: 200%;
+    width: 220%;
+    height: 220%;
     background:
-        radial-gradient(circle at 20% 20%, #ff00ff, transparent 40%),
-        radial-gradient(circle at 80% 30%, #00ffff, transparent 40%),
-        radial-gradient(circle at 50% 80%, #39ff14, transparent 40%);
-    filter: blur(90px);
-    animation: move 6s infinite alternate;
+        radial-gradient(circle at 20% 20%, #ff00ff, transparent 35%),
+        radial-gradient(circle at 80% 30%, #00ffff, transparent 35%),
+        radial-gradient(circle at 50% 80%, #39ff14, transparent 35%);
+    filter: blur(90px) saturate(2);
+    animation: bgMove 5s infinite alternate;
+    z-index: 0;
 }
 
-@keyframes move {
-    0% { transform: translate(-10%, -10%) scale(1); }
-    100% { transform: translate(-5%, -5%) scale(1.2); }
+@keyframes bgMove {
+    0% { transform: translate(-12%, -12%) scale(1) rotate(0deg); }
+    100% { transform: translate(-5%, -5%) scale(1.25) rotate(20deg); }
 }
 
-/* MAIN DISPLAY */
-#mainMedia {
-    max-width: 85vw;
-    max-height: 85vh;
-    border-radius: 20px;
-    z-index: 5;
+/* MAIN IMAGE */
+#mainImg {
+    max-width: 88vw;
+    max-height: 88vh;
+    border-radius: 22px;
     cursor: pointer;
-    box-shadow: 0 0 60px #ff00ff;
+    position: relative;
+    z-index: 10;
+    box-shadow:
+        0 0 60px rgba(255, 0, 255, 0.8),
+        0 0 120px rgba(0, 255, 255, 0.6);
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-/* FLOATING */
-.chaos {
+#mainImg:active {
+    transform: scale(0.97);
+}
+
+/* BOTTOM RIGHT IMAGE */
+#cornerImg {
     position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: 190px;
+    z-index: 9999;
+    pointer-events: none;
+    filter: drop-shadow(0 0 25px #ff00ff);
+}
+
+/* FALLING CHAOS */
+.fall {
+    position: fixed;
+    top: -220px;
     width: 120px;
+    z-index: 4;
     pointer-events: none;
-    animation: float linear forwards;
-    z-index: 3;
+    filter: drop-shadow(0 0 18px white);
+    animation: fallDown linear forwards;
 }
 
-@keyframes float {
-    0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
-    10% { opacity: 1; }
-    100% { transform: translateY(-30vh) rotate(720deg); opacity: 0; }
-}
-
-/* BURST */
-.burst {
-    position: fixed;
-    width: 80px;
-    pointer-events: none;
-    animation: burst 1s forwards;
-    z-index: 999;
-}
-
-@keyframes burst {
-    to {
-        transform: translate(var(--x), var(--y)) scale(1.3) rotate(720deg);
+@keyframes fallDown {
+    0% {
+        transform: translateY(-250px) rotate(0deg) scale(0.8);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(130vh) rotate(720deg) scale(1.2);
         opacity: 0;
     }
 }
 
-/* CORNER */
-#corner {
+/* CURSOR TRAIL */
+.trail {
     position: fixed;
-    bottom: 10px;
-    right: 10px;
-    width: 180px;
-    z-index: 9999;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: white;
+    z-index: 99999;
+    pointer-events: none;
+    box-shadow: 0 0 12px #ff00ff, 0 0 24px #00ffff;
+    animation: trailFade 600ms linear forwards;
+}
+
+@keyframes trailFade {
+    to {
+        transform: scale(0);
+        opacity: 0;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<div id="mainContainer"></div>
-
-<img id="corner" src="https://i.imgur.com/WLcWJA0.png">
+<img id="mainImg" src="https://i.imgur.com/SnKKkNU.png">
+<img id="cornerImg" src="https://i.imgur.com/WLcWJA0.png">
 
 <script>
-const media = [
+const slideImages = [
     "https://i.imgur.com/SnKKkNU.png",
     "https://i.imgur.com/m7oPaVQ.png",
     "https://i.imgur.com/aAQdrG7.png",
+    "https://i.imgur.com/KgqP1tt.jpeg",
+    "https://i.imgur.com/7GbsQG2.jpeg",
+    "https://i.imgur.com/Esx2nYF.png"
+];
 
+const chaosImages = [
+    "https://i.imgur.com/SnKKkNU.png",
+    "https://i.imgur.com/m7oPaVQ.png",
+    "https://i.imgur.com/aAQdrG7.png",
     "https://i.imgur.com/KgqP1tt.jpeg",
     "https://i.imgur.com/7GbsQG2.jpeg",
     "https://i.imgur.com/Esx2nYF.png",
-
-    "https://i.imgur.com/2nY8uOg.mp4",
-    "https://i.imgur.com/lQi51Js.mp4"
+    "https://i.imgur.com/WLcWJA0.png"
 ];
 
 let index = 0;
-const container = document.getElementById("mainContainer");
+const mainImg = document.getElementById("mainImg");
 
-function createMedia(src, main=false) {
-    let el;
+/* MAIN IMAGE SLIDESHOW ON CLICK */
+mainImg.addEventListener("click", function(e) {
+    e.stopPropagation();
 
-    if (src.endsWith(".mp4")) {
-        el = document.createElement("video");
-        el.src = src;
-        el.autoplay = true;
-        el.loop = true;
-        el.muted = true;
-    } else {
-        el = document.createElement("img");
-        el.src = src;
-    }
+    index = (index + 1) % slideImages.length;
+    mainImg.style.opacity = "0";
+    mainImg.style.transform = "scale(1.05)";
 
-    if (main) {
-        el.id = "mainMedia";
-        el.onclick = next;
-    } else {
-        el.className = "chaos";
-        el.style.left = Math.random()*100 + "vw";
-        el.style.width = (60 + Math.random()*120) + "px";
-        el.style.animationDuration = (4 + Math.random()*4) + "s";
+    setTimeout(() => {
+        mainImg.src = slideImages[index];
+        mainImg.style.opacity = "1";
+        mainImg.style.transform = "scale(1)";
+    }, 150);
+});
 
-        setTimeout(() => el.remove(), 8000);
-    }
+/* FALLING IMAGES FROM TOP TO BOTTOM */
+function spawnFalling() {
+    const img = document.createElement("img");
+    img.className = "fall";
+    img.src = chaosImages[Math.floor(Math.random() * chaosImages.length)];
 
-    return el;
+    img.style.left = Math.random() * 100 + "vw";
+    img.style.width = (70 + Math.random() * 140) + "px";
+    img.style.animationDuration = (3 + Math.random() * 4) + "s";
+
+    document.body.appendChild(img);
+
+    setTimeout(() => {
+        img.remove();
+    }, 8000);
 }
 
-function renderMain() {
-    container.innerHTML = "";
-    container.appendChild(createMedia(media[index], true));
-}
+setInterval(spawnFalling, 350);
 
-function next() {
-    index = (index + 1) % media.length;
-    renderMain();
-}
-
-renderMain();
-
-/* FLOATING CHAOS */
-setInterval(() => {
-    const el = createMedia(media[Math.floor(Math.random()*media.length)]);
-    document.body.appendChild(el);
-}, 400);
-
-/* CLICK BURST */
-document.addEventListener("click", e => {
-    for (let i=0;i<8;i++) {
-        const b = createMedia(media[Math.floor(Math.random()*media.length)]);
-        b.className = "burst";
-
-        const angle = Math.random()*Math.PI*2;
-        const dist = 100 + Math.random()*200;
-
-        b.style.left = e.clientX + "px";
-        b.style.top = e.clientY + "px";
-        b.style.setProperty("--x", Math.cos(angle)*dist + "px");
-        b.style.setProperty("--y", Math.sin(angle)*dist + "px");
-
-        document.body.appendChild(b);
-        setTimeout(() => b.remove(), 1000);
+/* EXTRA FALLING BURST WHEN CLICKING BACKGROUND */
+document.addEventListener("click", function() {
+    for (let i = 0; i < 8; i++) {
+        setTimeout(spawnFalling, i * 80);
     }
+});
+
+/* CURSOR TRAIL */
+document.addEventListener("mousemove", e => {
+    const dot = document.createElement("div");
+    dot.className = "trail";
+    dot.style.left = e.clientX + "px";
+    dot.style.top = e.clientY + "px";
+
+    document.body.appendChild(dot);
+
+    setTimeout(() => {
+        dot.remove();
+    }, 600);
 });
 </script>
 
