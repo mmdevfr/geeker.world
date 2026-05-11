@@ -14,6 +14,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    cursor: crosshair;
 }
 
 /* TRIPPY BACKGROUND */
@@ -25,7 +26,8 @@ body::before {
     background:
         radial-gradient(circle at 20% 20%, #ff00ff, transparent 35%),
         radial-gradient(circle at 80% 30%, #00ffff, transparent 35%),
-        radial-gradient(circle at 50% 80%, #39ff14, transparent 35%);
+        radial-gradient(circle at 50% 80%, #39ff14, transparent 35%),
+        radial-gradient(circle at 10% 90%, #ff0000, transparent 30%);
     filter: blur(90px) saturate(2);
     animation: bgMove 5s infinite alternate;
     z-index: 0;
@@ -36,14 +38,14 @@ body::before {
     100% { transform: translate(-5%, -5%) scale(1.25) rotate(20deg); }
 }
 
-/* MAIN IMAGE */
+/* MAIN SLIDESHOW IMAGE */
 #mainImg {
     max-width: 88vw;
     max-height: 88vh;
     border-radius: 22px;
     cursor: pointer;
     position: relative;
-    z-index: 10;
+    z-index: 20;
     box-shadow:
         0 0 60px rgba(255, 0, 255, 0.8),
         0 0 120px rgba(0, 255, 255, 0.6);
@@ -63,6 +65,13 @@ body::before {
     z-index: 9999;
     pointer-events: none;
     filter: drop-shadow(0 0 25px #ff00ff);
+    animation: floaty 2.5s ease-in-out infinite;
+}
+
+@keyframes floaty {
+    0% { transform: translateY(0px) rotate(-2deg); }
+    50% { transform: translateY(-12px) rotate(3deg); }
+    100% { transform: translateY(0px) rotate(-2deg); }
 }
 
 /* FALLING CHAOS */
@@ -70,7 +79,7 @@ body::before {
     position: fixed;
     top: -220px;
     width: 120px;
-    z-index: 4;
+    z-index: 8;
     pointer-events: none;
     filter: drop-shadow(0 0 18px white);
     animation: fallDown linear forwards;
@@ -81,11 +90,39 @@ body::before {
         transform: translateY(-250px) rotate(0deg) scale(0.8);
         opacity: 0;
     }
-    10% {
-        opacity: 1;
-    }
+    10% { opacity: 1; }
     100% {
         transform: translateY(130vh) rotate(720deg) scale(1.2);
+        opacity: 0;
+    }
+}
+
+/* ARBYS TEXT CHAOS */
+.meatText {
+    position: fixed;
+    top: -120px;
+    color: red;
+    font-size: 38px;
+    font-weight: 900;
+    font-family: Arial, sans-serif;
+    text-shadow:
+        0 0 10px red,
+        0 0 25px orange,
+        0 0 40px yellow;
+    animation: meatFall linear forwards;
+    white-space: nowrap;
+    z-index: 12;
+    pointer-events: none;
+}
+
+@keyframes meatFall {
+    0% {
+        transform: translateY(-160px) rotate(0deg) scale(0.8);
+        opacity: 0;
+    }
+    10% { opacity: 1; }
+    100% {
+        transform: translateY(130vh) rotate(720deg) scale(1.4);
         opacity: 0;
     }
 }
@@ -109,22 +146,50 @@ body::before {
         opacity: 0;
     }
 }
+
+/* TOP TEXT */
+#modeText {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 9999;
+    color: white;
+    font-family: Arial, sans-serif;
+    font-weight: 900;
+    font-size: 20px;
+    text-shadow: 0 0 15px #ff00ff, 0 0 25px #00ffff;
+    pointer-events: none;
+}
+
+/* PHYSICS CANVAS */
+canvas {
+    border: none !important;
+}
 </style>
 </head>
 
 <body>
 
+<div id="modeText">geeker.world // PHYSICS CHAOS</div>
+
 <img id="mainImg" src="https://i.imgur.com/SnKKkNU.png">
 <img id="cornerImg" src="https://i.imgur.com/WLcWJA0.png">
 
+<!-- MATTER.JS PHYSICS LIBRARY -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+
 <script>
+/* MAIN IMAGES */
 const slideImages = [
     "https://i.imgur.com/SnKKkNU.png",
     "https://i.imgur.com/m7oPaVQ.png",
     "https://i.imgur.com/aAQdrG7.png",
     "https://i.imgur.com/KgqP1tt.jpeg",
     "https://i.imgur.com/7GbsQG2.jpeg",
-    "https://i.imgur.com/Esx2nYF.png"
+    "https://i.imgur.com/Esx2nYF.png",
+
+    /* Upload this file to GitHub next to index.html */
+    "image(6).png"
 ];
 
 const chaosImages = [
@@ -134,28 +199,42 @@ const chaosImages = [
     "https://i.imgur.com/KgqP1tt.jpeg",
     "https://i.imgur.com/7GbsQG2.jpeg",
     "https://i.imgur.com/Esx2nYF.png",
-    "https://i.imgur.com/WLcWJA0.png"
+    "https://i.imgur.com/WLcWJA0.png",
+    "image(6).png"
 ];
 
+const meats = [
+    "ARBYS",
+    "WE HAVE THE MEATS",
+    "MEAT MOUNTAIN",
+    "BEEF",
+    "CURLY FRIES",
+    "MEAT CRAFT",
+    "🍔🍔🍔",
+    "💵💵💵",
+    "🥩🥩🥩",
+    "🍟🍟🍟"
+];
+
+/* CLICK SLIDESHOW */
 let index = 0;
 const mainImg = document.getElementById("mainImg");
 
-/* MAIN IMAGE SLIDESHOW ON CLICK */
 mainImg.addEventListener("click", function(e) {
     e.stopPropagation();
 
     index = (index + 1) % slideImages.length;
     mainImg.style.opacity = "0";
-    mainImg.style.transform = "scale(1.05)";
+    mainImg.style.transform = "scale(1.05) rotate(2deg)";
 
     setTimeout(() => {
         mainImg.src = slideImages[index];
         mainImg.style.opacity = "1";
-        mainImg.style.transform = "scale(1)";
+        mainImg.style.transform = "scale(1) rotate(0deg)";
     }, 150);
 });
 
-/* FALLING IMAGES FROM TOP TO BOTTOM */
+/* FALLING IMAGE CHAOS */
 function spawnFalling() {
     const img = document.createElement("img");
     img.className = "fall";
@@ -172,13 +251,34 @@ function spawnFalling() {
     }, 8000);
 }
 
-setInterval(spawnFalling, 350);
+/* ARBYS TEXT CHAOS */
+function spawnMeat() {
+    const t = document.createElement("div");
+    t.className = "meatText";
+    t.innerText = meats[Math.floor(Math.random() * meats.length)];
 
-/* EXTRA FALLING BURST WHEN CLICKING BACKGROUND */
+    t.style.left = Math.random() * 100 + "vw";
+    t.style.fontSize = (24 + Math.random() * 42) + "px";
+    t.style.animationDuration = (2.5 + Math.random() * 4) + "s";
+
+    document.body.appendChild(t);
+
+    setTimeout(() => {
+        t.remove();
+    }, 7000);
+}
+
+setInterval(spawnFalling, 650);
+setInterval(spawnMeat, 700);
+
+/* EXTRA CHAOS ON BACKGROUND CLICK */
 document.addEventListener("click", function() {
     for (let i = 0; i < 8; i++) {
         setTimeout(spawnFalling, i * 80);
+        setTimeout(spawnMeat, i * 80);
     }
+
+    addPhysicsImage();
 });
 
 /* CURSOR TRAIL */
@@ -193,6 +293,136 @@ document.addEventListener("mousemove", e => {
     setTimeout(() => {
         dot.remove();
     }, 600);
+});
+
+/* PHYSICS CHAOS */
+const { Engine, Render, Runner, Bodies, Composite, Body, Mouse, MouseConstraint } = Matter;
+
+const engine = Engine.create();
+engine.gravity.y = 0.7;
+
+const render = Render.create({
+    element: document.body,
+    engine: engine,
+    options: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        wireframes: false,
+        background: "transparent"
+    }
+});
+
+render.canvas.style.position = "fixed";
+render.canvas.style.top = "0";
+render.canvas.style.left = "0";
+render.canvas.style.zIndex = "3";
+render.canvas.style.pointerEvents = "auto";
+
+Render.run(render);
+Runner.run(Runner.create(), engine);
+
+/* WALLS */
+let ground = Bodies.rectangle(
+    window.innerWidth / 2,
+    window.innerHeight + 40,
+    window.innerWidth,
+    80,
+    { isStatic: true, render: { visible: false } }
+);
+
+let leftWall = Bodies.rectangle(
+    -40,
+    window.innerHeight / 2,
+    80,
+    window.innerHeight,
+    { isStatic: true, render: { visible: false } }
+);
+
+let rightWall = Bodies.rectangle(
+    window.innerWidth + 40,
+    window.innerHeight / 2,
+    80,
+    window.innerHeight,
+    { isStatic: true, render: { visible: false } }
+);
+
+Composite.add(engine.world, [ground, leftWall, rightWall]);
+
+/* DRAG PHYSICS OBJECTS */
+const mouse = Mouse.create(render.canvas);
+const mouseConstraint = MouseConstraint.create(engine, {
+    mouse: mouse,
+    constraint: {
+        stiffness: 0.2,
+        render: { visible: false }
+    }
+});
+
+Composite.add(engine.world, mouseConstraint);
+render.mouse = mouse;
+
+/* ADD BOUNCING IMAGE */
+function addPhysicsImage() {
+    const size = 90 + Math.random() * 90;
+    const texture = chaosImages[Math.floor(Math.random() * chaosImages.length)];
+
+    const body = Bodies.rectangle(
+        Math.random() * window.innerWidth,
+        -100,
+        size,
+        size,
+        {
+            restitution: 0.9,
+            friction: 0.02,
+            frictionAir: 0.01,
+            render: {
+                sprite: {
+                    texture: texture,
+                    xScale: size / 500,
+                    yScale: size / 500
+                }
+            }
+        }
+    );
+
+    Body.setAngularVelocity(body, Math.random() * 0.3 - 0.15);
+    Body.setVelocity(body, {
+        x: Math.random() * 8 - 4,
+        y: Math.random() * 4
+    });
+
+    Composite.add(engine.world, body);
+
+    setTimeout(() => {
+        Composite.remove(engine.world, body);
+    }, 18000);
+}
+
+/* AUTO SPAWN PHYSICS */
+setInterval(addPhysicsImage, 1600);
+
+/* RESIZE FIX */
+window.addEventListener("resize", () => {
+    render.canvas.width = window.innerWidth;
+    render.canvas.height = window.innerHeight;
+});
+
+/* KEYBOARD CHAOS */
+document.addEventListener("keydown", e => {
+    const key = e.key.toLowerCase();
+
+    if (key === "g") {
+        document.getElementById("modeText").innerText = "geeker.world // GIGA PHYSICS";
+        for (let i = 0; i < 25; i++) {
+            setTimeout(addPhysicsImage, i * 80);
+            setTimeout(spawnFalling, i * 70);
+            setTimeout(spawnMeat, i * 70);
+        }
+    }
+
+    if (key === "r") {
+        location.reload();
+    }
 });
 </script>
 
